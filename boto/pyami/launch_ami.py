@@ -22,7 +22,7 @@
 #
 import getopt
 import sys
-import imp
+import importlib.util
 import time
 import boto
 
@@ -132,11 +132,12 @@ def main():
             print('Reloading module %s to S3' % params['script_name'])
         else:
             print('Copying module %s to S3' % params['script_name'])
-        l = imp.find_module(params['script_name'])
+        spec = importlib.util.find_spec(params['script_name'])
         c = boto.connect_s3()
         bucket = c.get_bucket(params['script_bucket'])
         key = bucket.new_key(params['script_name'] + '.py')
-        key.set_contents_from_file(l[0])
+        with open(spec.origin, 'r') as F:
+            key.set_contents_from_file(F)
         params['script_md5'] = key.md5
     # we have everything we need, now build userdata string
     l = []

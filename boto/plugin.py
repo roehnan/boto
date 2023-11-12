@@ -37,7 +37,8 @@ The actual interface is duck typed.
 """
 
 import glob
-import imp
+import importlib.util
+import sys
 import os.path
 
 
@@ -70,12 +71,10 @@ def _import_module(filename):
     (path, name) = os.path.split(filename)
     (name, ext) = os.path.splitext(name)
 
-    (file, filename, data) = imp.find_module(name, [path])
-    try:
-        return imp.load_module(name, file, filename, data)
-    finally:
-        if file:
-            file.close()
+    spec = importlib.util.find_spec(name, filename)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
 
 _plugin_loaded = False
 
